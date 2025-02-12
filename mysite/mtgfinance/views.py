@@ -8,7 +8,6 @@ def homepage(request):
     cards_data = []
     if card_name:
         cards_data = fetch_card_data(card_name)
-        print(cards_data)
 
         if not cards_data:
             cards_data = None

@@ -1,6 +1,15 @@
 from django.shortcuts import render
+from .utils import fetch_card_data
 
 # Create your views here.
 
 def homepage(request):
-    return render(request, "mtgfinance/index.html")
+    card_name = request.GET.get("q")
+    cards_data = []
+    if card_name:
+        cards_data = fetch_card_data(card_name)
+        print(cards_data)
+
+        if not cards_data:
+            cards_data = None
+    return render(request, "mtgfinance/index.html", {"cards": cards_data})

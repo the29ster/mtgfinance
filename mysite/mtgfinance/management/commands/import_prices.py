@@ -29,15 +29,10 @@ class Command(BaseCommand):
         
         # Iterate through each card's data
         for card_id, sets in price_data.items():
-            # print(f"Processing card: {card_id}")  # Debugging line to track the current card being processed
-            
             for set_code, price_info in sets.items():
-                # print(f"  Processing set: {set_code}")  # Debugging line to track set
                 for source, price_history in price_info.items():
                     if source != "tcgplayer":
                         continue
-                    # print(f"    Processing source: {source}")  # Debugging line for source
-                    
                     if isinstance(price_history, dict):  # Ensure it's a dict with date-price pairs
                         if price_history.get('retail'):  # Check if 'retail' exists
                             retail_history = price_history['retail']
@@ -50,7 +45,6 @@ class Command(BaseCommand):
 
                                     try:
                                         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-                                        # print(f"      Processed: {card_id} - {set_code} - {date_obj} - {price}")  # Debug line
 
                                         bulk_prices.append(
                                             CardPriceHistory(
@@ -64,15 +58,8 @@ class Command(BaseCommand):
                                     except ValueError:
                                         self.stderr.write(f"Skipping invalid date format: {date_str}")
 
-                        #else:
-                            #print(f"      No 'retail' price history found for {card_id} - {set_code} - {source}")
-                    #else:
-                        #print(f"      Skipping non-dict price history for {card_id} - {set_code} - {source}")
-
         if bulk_prices:
             self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")
-            # Debug: Print the first few entries to confirm what we are inserting
-            print(f"Bulk prices to insert: {bulk_prices[:5]}")  # Print the first 5 records for debugging
             CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
         
         self.stdout.write("Import completed successfully.")

@@ -15,13 +15,11 @@ def homepage(request):
     return render(request, "index.html", {"cards": cards_data})
 
 def card_price_view(request, card_name):
-    # Fetch all price history for the given card, filtering by TCGPlayer
-    prices = CardPriceHistory.objects.filter(card_name=card_name, source="tcgplayer").order_by("date")
+    price_data = CardPriceHistory.objects.filter(card_name=card_name).order_by('date')
 
-    # Prepare data for the chart
-    price_data = {
-        "dates": [entry.date.strftime("%Y-%m-%d") for entry in prices],
-        "prices": [float(entry.price) for entry in prices]  # Convert Decimal to float for JS
-    }
+    # Debugging: Print data to the Django console
+    print(f"Price history for {card_name}:")
+    for entry in price_data:
+        print(f"Date: {entry.date}, Price: {entry.price}, Source: {entry.source}")
 
     return render(request, "card_price.html", {"card_name": card_name, "price_data": price_data})

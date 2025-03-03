@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Price History</title>
+</head>
+<body>
+    <h1>Price History for Card ID: {{ card_name }}</h1>
+    <table border="1">
+        <tr>
+            <th>Date</th>
+            <th>Price</th>
+            <th>Source</th>
+        </tr>
+        {% for price in price_history %}
+        <tr>
+            <td>{{ price.date }}</td>
+            <td>${{ price.price }}</td>
+            <td>{{ price.source }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No price data available.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

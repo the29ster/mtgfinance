@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from .utils import fetch_card_data
 from .models import CardPriceHistory
 
@@ -14,12 +14,7 @@ def homepage(request):
             cards_data = None
     return render(request, "index.html", {"cards": cards_data})
 
-def card_price_view(request, card_name):
-    price_data = CardPriceHistory.objects.filter(card_name=card_name).order_by('date')
-
-    # Debugging: Print data to the Django console
-    print(f"Price history for {card_name}:")
-    for entry in price_data:
-        print(f"Date: {entry.date}, Price: {entry.price}, Source: {entry.source}")
-
-    return render(request, "card_price.html", {"card_name": card_name, "price_data": price_data})
+def card_price_history(request, scryfall_id):
+    price_history = CardPriceHistory.objects.filter(card_name=scryfall_id).order_by('date')
+    card_name = request.GET.get("name", "Unknown Card")
+    return render(request, "card_price_history.html", {"scryfall_id": scryfall_id, "price_history": price_history, "card_name": card_name})

@@ -59,7 +59,7 @@
                     <p>Set: {{ card.set_name }}</p>
                     <p>Price: {% if card.prices.usd %} ${{ card.prices.usd }} {% else %} N/A {% endif %}</p>
 
-                    <p><a href="{% url 'card_price' card.name %}">View Price History</a></p>
+                    <p><a href="{% url 'card_price_history' card.id %}?name={{ card.name }}">View Price History</a></p>
                 </li>
             {% endfor %}
         </ul>

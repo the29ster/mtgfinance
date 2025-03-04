@@ -10,6 +10,7 @@ class Command(BaseCommand):
     help = "Import historical MTG card prices with Scryfall IDs"
 
     def handle(self, *args, **kwargs):
+        
         self.stdout.write("Flushing database...")
         subprocess.run("python manage.py flush --noinput")
         self.stdout.write("Flush complete.")

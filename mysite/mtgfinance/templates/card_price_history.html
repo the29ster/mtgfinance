@@ -1,29 +1,65 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Price History</title>
+    <title>Price History for {{ card_name }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        canvas { 
+            max-width: 100%; 
+            height: 1000px;
+            margin: 20px auto; 
+            display: block; 
+        }
+    </style>
 </head>
 <body>
-    <h1>Price History for Card ID: {{ card_name }}</h1>
-    <table border="1">
-        <tr>
-            <th>Date</th>
-            <th>Price</th>
-            <th>Source</th>
-        </tr>
-        {% for price in price_history %}
-        <tr>
-            <td>{{ price.date }}</td>
-            <td>${{ price.price }}</td>
-            <td>{{ price.source }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No price data available.</td>
-        </tr>
-        {% endfor %}
-    </table>
+
+    <h1>Price History for {{ card_name }}</h1>
+    <button onclick="window.history.back();">Back</button>
+    <canvas id="priceChart"></canvas>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const dates = JSON.parse('{{ dates|escapejs }}');
+        const prices = JSON.parse('{{ prices|escapejs }}');
+        
+        const ctx = document.getElementById("priceChart").getContext("2d");
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: "Price ($)",
+                    data: prices,
+                    borderColor: "blue",
+                    fill: false,
+                    tension: 0.1,
+                    pointBackgroundColor: "red",
+                    pointBorderColor: "black",
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: "yellow",
+                    pointHoverBorderColor: "black",
+                    pointHitRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1,
+                scales: {
+                    x: { title: { display: true, text: "Date" } },
+                    y: { title: { display: true, text: "Price ($)" }, beginAtZero: false }
+                }
+            }
+        });
+    });
+    </script>
+
 </body>
 </html>

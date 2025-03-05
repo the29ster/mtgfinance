@@ -81,15 +81,9 @@ class Command(BaseCommand):
                             except ValueError:
                                 self.stderr.write(f"Skipping invalid date format: {date_str}")
 
-        BATCH_SIZE = 50000
-
         if bulk_prices:
-            self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database in batches...")
-    
-            with transaction.atomic():  # Ensures faster batch commits
-                for i in range(0, len(bulk_prices), BATCH_SIZE):
-                    CardPriceHistory.objects.bulk_create(bulk_prices[i:i + BATCH_SIZE], ignore_conflicts=True)
-                    self.stdout.write(f"Inserted {i + BATCH_SIZE}/{len(bulk_prices)} records...")
+            self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")
+            CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
         else:
             self.stdout.write("No valid price data found.")
 

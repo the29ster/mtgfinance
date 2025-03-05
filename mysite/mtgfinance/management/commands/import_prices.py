@@ -16,9 +16,9 @@ class Command(BaseCommand):
         response = requests.get(zip_url, stream=True)
         if response.status_code == 200:
             with zipfile.ZipFile(BytesIO(response.content), "r") as z:
-                json_filename = z.namelist()[0]  # Get the JSON file inside the ZIP
+                json_filename = z.namelist()[0]
                 with z.open(json_filename) as json_file:
-                    return json.load(json_file)  # Load JSON data
+                    return json.load(json_file)
         else:
             self.stderr.write(f"Failed to fetch {zip_url}. HTTP Status: {response.status_code}")
             return None
@@ -40,7 +40,7 @@ class Command(BaseCommand):
         mtgjson_to_scryfall = {
             card_id: data.get("identifiers", {}).get("scryfallId")
             for card_id, data in identifier_data.get("data", {}).items()
-            if data.get("identifiers", {}).get("scryfallId")  # Ensure key exists
+            if data.get("identifiers", {}).get("scryfallId")
         }
 
         # Load price data
@@ -59,7 +59,7 @@ class Command(BaseCommand):
         for card_id, sets in price_data.get("data", {}).items():
             scryfall_id = get_scryfall(card_id)  # Find matching Scryfall ID
             if not scryfall_id:
-                continue  # Skip if we can't map it
+                continue
             for set_code, price_info in sets.items():
                 for source, price_history in price_info.items():
                     if source != "tcgplayer":

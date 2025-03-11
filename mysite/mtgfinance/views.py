@@ -6,14 +6,14 @@ import json
 # Create your views here.
 
 def homepage(request):
-    card_name = request.GET.get("q")
+    card_name = request.GET.get("q", "")
     cards_data = []
     if card_name:
         cards_data = fetch_card_data(card_name)
 
         if not cards_data:
             cards_data = None
-    return render(request, "index.html", {"cards": cards_data})
+    return render(request, "index.html", {"cards": cards_data, "query": card_name})
 
 def card_price_history(request, scryfall_id):
     price_entries = CardPriceHistory.objects.filter(card_name=scryfall_id).order_by("date")

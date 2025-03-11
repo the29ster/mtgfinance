@@ -32,7 +32,7 @@
 
     <!-- Display Card Data If Found -->
     {% if cards %}
-        <h2>Search Results:</h2>
+        <h2>Search Results For: "{{ query }}"</h2>
         <ul>
             {% for card in cards %}
                 <li>
@@ -64,7 +64,8 @@
             {% endfor %}
         </ul>
     {% elif request.GET.q %}
-        <p>No cards found.</p>
+        <h2>Search Results For: "{{ query }}"</h2>
+        <p style="text-align:center;">No cards found.</p>
     {% endif %}
 </body>
 </html>

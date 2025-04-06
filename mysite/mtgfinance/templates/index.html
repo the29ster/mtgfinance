@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>MTGFinance</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
     <script>
         // Function to flip the card image
         function flipCard(cardId) {
@@ -21,13 +22,24 @@
         }
     </script>
 </head>
+
 <body>
+    {% if messages %}
+    <div id="message-banner">
+        {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Auth Buttons -->
     <div style="text-align: right; margin-bottom: 1em;">
         {% if request.user.is_authenticated %}
             <span>Welcome, {{ request.user.username }}!</span>
             <a href="{% url 'logout' %}">Logout</a>
+            <a href="{% url 'my_collection' %}">My Collection</a>
         {% else %}
             <a href="{% url 'login' %}">Login</a> |
             <a href="{% url 'register' %}">Register</a>
@@ -72,6 +84,15 @@
                     <p>Price: {% if card.prices.usd %} ${{ card.prices.usd }} {% else %} N/A {% endif %}</p>
 
                     <p><a href="{% url 'card_price_history' card.id %}?name={{ card.name }}">View Price History</a></p>
+
+                    {% if request.user.is_authenticated %}
+                        <form method="POST" action="{% url 'add_to_collection' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="scryfall_id" value="{{ card.id }}">
+                        <button type="submit">Add to Collection</button>
+                        </form>
+                    {% endif %}
+
                 </li>
             {% endfor %}
         </ul>
@@ -79,5 +100,16 @@
         <h2>Search Results For: "{{ query }}"</h2>
         <p style="text-align:center;">No cards found.</p>
     {% endif %}
+
+    <script>
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.flash-message');
+            messages.forEach(msg => {
+                msg.style.animation = 'fadeOut 0.5s forwards';
+            });
+        }, 3000);
+    </script>
+
 </body>
 </html>

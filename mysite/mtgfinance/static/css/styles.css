@@ -77,3 +77,59 @@ h2 {
 p {
     margin: 5px 0;
 }
+
+#message-banner {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: auto;
+    text-align: center;
+    pointer-events: none;
+}
+
+.flash-message {
+    display: inline-block;
+    background-color: #323232;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0.95;
+    pointer-events: auto;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Message type colors */
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 6px solid #28a745;
+}
+
+.flash-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 6px solid #17a2b8;
+}
+
+/* Fade animations */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 0.95;
+        transform: translateY(0);
+    }
+}

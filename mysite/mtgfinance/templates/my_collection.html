@@ -1,0 +1,57 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+<div style="text-align: right; margin-bottom: 1em;">
+        <span>Welcome, {{ request.user.username }}!</span>
+        <a href="{% url 'logout' %}">Logout</a>
+        <a href="{% url 'my_collection' %}">My Collection</a>
+</div>
+
+<h2>My Collection</h2>
+
+<a href="{% url 'homepage' %}"><button>Back</button></a>
+
+{% if messages %}
+    <div id="message-banner">
+        {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if cards %}
+    <ul>
+        {% for card in cards %}
+            <li>
+                <h3>{{ card.name }}</h3>
+                <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}" style="width: 200px;">
+
+                <p>Set: {{ card.set_name }}</p>
+                <p>Price: {% if card.prices.usd %} ${{ card.prices.usd }} {% else %} N/A {% endif %}</p>
+
+                <p><a href="{% url 'card_price_history' card.id %}?name={{ card.name }}">View Price History</a></p>
+
+                <!-- Remove Button -->
+                <form method="POST" action="{% url 'remove_from_collection' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="scryfall_id" value="{{ card.id }}">
+                    <button type="submit">Remove from Collection</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>You have no cards in your collection.</p>
+{% endif %}
+
+<script>
+    // Fade out after 3 seconds
+    setTimeout(() => {
+        const messages = document.querySelectorAll('.flash-message');
+        messages.forEach(msg => {
+            msg.style.animation = 'fadeOut 0.5s forwards';
+        });
+    }, 3000);
+</script>

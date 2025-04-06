@@ -22,6 +22,18 @@
     </script>
 </head>
 <body>
+
+    <!-- Auth Buttons -->
+    <div style="text-align: right; margin-bottom: 1em;">
+        {% if request.user.is_authenticated %}
+            <span>Welcome, {{ request.user.username }}!</span>
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a> |
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+
     <h1>MTGFinance</h1>
 
     <!-- Search Form -->

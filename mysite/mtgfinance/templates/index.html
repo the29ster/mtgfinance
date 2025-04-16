@@ -1,10 +1,6 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>MTGFinance</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+{% extends "base.html" %}
+{% block title %}MTGFinance Search{% endblock %}
+{% block content %}
 
     <script>
         // Function to flip the card image
@@ -21,7 +17,6 @@
             }
         }
     </script>
-</head>
 
 <body>
     {% if messages %}
@@ -33,18 +28,6 @@
         {% endfor %}
     </div>
     {% endif %}
-
-    <!-- Auth Buttons -->
-    <div style="text-align: right; margin-bottom: 1em;">
-        {% if request.user.is_authenticated %}
-            <span>Welcome, {{ request.user.username }}!</span>
-            <a href="{% url 'logout' %}">Logout</a>
-            <a href="{% url 'my_collection' %}">My Collection</a>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a> |
-            <a href="{% url 'register' %}">Register</a>
-        {% endif %}
-    </div>
 
     <h1>MTGFinance</h1>
 
@@ -112,4 +95,5 @@
     </script>
 
 </body>
-</html>
+
+{% endblock %}

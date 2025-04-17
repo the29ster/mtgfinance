@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}MTGFinance Homepage{% endblock %}
+{% block content %}
+
+<script>
+    // Function to flip the card image
+    function flipCard(cardId) {
+        var frontImg = document.getElementById('front-' + cardId);
+        var backImg = document.getElementById('back-' + cardId);
+        
+        if (frontImg.style.display === "none") {
+            frontImg.style.display = "block";
+            backImg.style.display = "none";
+        } else {
+            frontImg.style.display = "none";
+            backImg.style.display = "block";
+        }
+    }
+</script>
+
+<body>
+    {% if messages %}
+    <div id="message-banner">
+        {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1>MTGFinance</h1>
+
+    <!-- Search Form -->
+    <form method="GET">
+        <input type="text" name="q" placeholder="Search for a card" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Display Card Data If Found -->
+    {% if cards %}
+        <h2>Search Results For: "{{ query }}"</h2>
+        <ul>
+            {% for card in cards %}
+                <li>
+                    <h3>{{ card.name }}</h3>
+                    
+                    {% if card.card_faces %}
+                        <!-- Double-Sided Card -->
+                        <div class="card-images">
+                            <!-- Front Image -->
+                            <img id="front-{{ card.id }}" src="{{ card.card_faces.0.image_uris.normal }}" alt="{{ card.name }} (Front)" class="card-img">
+                            
+                            <!-- Back Image (hidden by default) -->
+                            <img id="back-{{ card.id }}" src="{{ card.card_faces.1.image_uris.normal }}" alt="{{ card.name }} (Back)" class="card-img" style="display:none;">
+                        </div>
+
+                        <!-- Flip Button -->
+                        <button onclick="flipCard('{{ card.id }}')">Flip Card</button>
+
+                    {% else %}
+                        <!-- Single-Sided Card: Show Only Front -->
+                        <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}" class="card-img">
+                    {% endif %}
+                    
+                    <p>Set: {{ card.set_name }}</p>
+                    <p>Price: {% if card.prices.usd %} ${{ card.prices.usd }} {% else %} N/A {% endif %}</p>
+
+                    <div class="card-buttons">
+                        <form method="GET" action="{% url 'card_price_history' card.id %}">
+                            <input type="hidden" name="name" value="{{ card.name }}">
+                            <button type="submit" class="card-button">View Price History</button>
+                        </form>
+                    
+                        {% if request.user.is_authenticated %}
+                            <form method="POST" action="{% url 'add_to_collection' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="scryfall_id" value="{{ card.id }}">
+                                <button type="submit" class="card-button">Add to Collection</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
+
+                </li>
+            {% endfor %}
+        </ul>
+    {% elif request.GET.q %}
+        <h2>Search Results For: "{{ query }}"</h2>
+        <p style="text-align:center;">No cards found.</p>
+    {% endif %}
+
+    <script>
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.flash-message');
+            messages.forEach(msg => {
+                msg.style.animation = 'fadeOut 0.5s forwards';
+            });
+        }, 3000);
+    </script>
+
+</body>
+
+{% endblock %}

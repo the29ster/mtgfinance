@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -11,3 +12,13 @@ class CardPriceHistory(models.Model):
 
     def __str__(self):
         return f"{self.card_name} ({self.set_code}) - {self.date}: ${self.price}"
+    
+class CardCollection(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    scryfall_id = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('user', 'scryfall_id')  # Prevent duplicates
+
+    def __str__(self):
+        return f"{self.user.username} - {self.scryfall_id}"

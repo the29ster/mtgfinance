@@ -1,0 +1,220 @@
+:root {
+    --white-mana: #f5f0e6;
+    --blue-mana: #5c9ee5;
+    --black-mana: #3b3a3a;
+    --red-mana: #e4572e;
+    --green-mana: #3aa655;
+    --gold: #d4af37;
+}
+
+body {
+    font-family: 'Georgia', serif;
+    background: radial-gradient(circle at top, #1e1e2f, #0e0e17);
+    color: #e2e2e2;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: var(--gold);
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    width: 300px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: var(--blue-mana);
+    color: white;
+    border: 2px solid var(--white-mana);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+button:hover {
+    background-color: var(--red-mana);
+    transform: scale(1.05);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;  /* Distribute cards evenly across the page */
+    gap: 20px;  /* Adds space between cards */
+}
+
+li {
+    background: linear-gradient(145deg, #2c2c3e, #1a1a26);
+    color: var(--white-mana);
+    padding: 15px;
+    margin: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    width: 300px;
+    text-align: center;
+    border: 2px solid var(--blue-mana);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-images {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.card-img {
+    width: 250px;
+    height: 350px;
+    object-fit: contain;
+    margin-top: 10px;
+}
+
+h2 {
+    text-align: center;
+    color: var(--gold);
+}
+
+p {
+    margin: 5px 0;
+}
+
+#message-banner {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: auto;
+    text-align: center;
+    pointer-events: none;
+}
+
+.flash-message {
+    display: inline-block;
+    background-color: #323232;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0.95;
+    pointer-events: auto;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Message type colors */
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 6px solid #28a745;
+}
+
+.flash-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 6px solid #17a2b8;
+}
+
+/* Fade animations */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 0.95;
+        transform: translateY(0);
+    }
+}
+
+/* Navigation Bar */
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    background-color: #1e1e2f;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+nav a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+}
+
+nav a:hover {
+    background-color: var(--blue-mana);
+    color: #fff;
+}
+
+.card-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.card-buttons form {
+    margin: 0;
+}
+
+.card-button {
+    width: 140px;
+    padding: 10px;
+    font-weight: bold;
+    background-color: var(--blue-mana);
+    color: white;
+    border: 2px solid var(--white-mana);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.card-button:hover {
+    background-color: var(--red-mana);
+    transform: scale(1.05);
+}
+
+.danger-button {
+    background-color: #b71c1c;
+    border: 2px solid #ef9a9a;
+}
+
+.danger-button:hover {
+    background-color: #d32f2f;
+    border-color: #ef5350;
+}

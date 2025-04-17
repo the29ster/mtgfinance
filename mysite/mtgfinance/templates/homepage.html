@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}MTGFinance Search{% endblock %}
+{% block title %}MTGFinance Homepage{% endblock %}
 {% block content %}
 
-    <script>
-        // Function to flip the card image
-        function flipCard(cardId) {
-            var frontImg = document.getElementById('front-' + cardId);
-            var backImg = document.getElementById('back-' + cardId);
-            
-            if (frontImg.style.display === "none") {
-                frontImg.style.display = "block";
-                backImg.style.display = "none";
-            } else {
-                frontImg.style.display = "none";
-                backImg.style.display = "block";
-            }
+<script>
+    // Function to flip the card image
+    function flipCard(cardId) {
+        var frontImg = document.getElementById('front-' + cardId);
+        var backImg = document.getElementById('back-' + cardId);
+        
+        if (frontImg.style.display === "none") {
+            frontImg.style.display = "block";
+            backImg.style.display = "none";
+        } else {
+            frontImg.style.display = "none";
+            backImg.style.display = "block";
         }
-    </script>
+    }
+</script>
 
 <body>
     {% if messages %}
@@ -66,15 +66,21 @@
                     <p>Set: {{ card.set_name }}</p>
                     <p>Price: {% if card.prices.usd %} ${{ card.prices.usd }} {% else %} N/A {% endif %}</p>
 
-                    <p><a href="{% url 'card_price_history' card.id %}?name={{ card.name }}">View Price History</a></p>
-
-                    {% if request.user.is_authenticated %}
-                        <form method="POST" action="{% url 'add_to_collection' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="scryfall_id" value="{{ card.id }}">
-                        <button type="submit">Add to Collection</button>
+                    <div class="card-buttons">
+                        <form method="GET" action="{% url 'card_price_history' card.id %}">
+                            <input type="hidden" name="name" value="{{ card.name }}">
+                            <button type="submit" class="card-button">View Price History</button>
                         </form>
-                    {% endif %}
+                    
+                        {% if request.user.is_authenticated %}
+                            <form method="POST" action="{% url 'add_to_collection' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="scryfall_id" value="{{ card.id }}">
+                                <button type="submit" class="card-button">Add to Collection</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
 
                 </li>
             {% endfor %}

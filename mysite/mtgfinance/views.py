@@ -15,7 +15,7 @@ def homepage(request):
 
         if not cards_data:
             cards_data = None
-    return render(request, "index.html", {"cards": cards_data, "query": card_name})
+    return render(request, "homepage.html", {"cards": cards_data, "query": card_name})
 
 def card_price_history(request, scryfall_id):
     price_entries = CardPriceHistory.objects.filter(card_name=scryfall_id).order_by("date")

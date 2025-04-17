@@ -1,22 +1,21 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Price History for {{ card_name }}</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        canvas { 
-            max-width: 100%; 
-            height: 1000px;
-            margin: 20px auto; 
-            display: block; 
-        }
-    </style>
-</head>
+{% extends "base.html" %}
+{% block title %}MTGFinance Chart{% endblock %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    canvas { 
+        max-width: 100%; 
+        height: 1000px;
+        margin: 20px auto; 
+        display: block; 
+    }
+</style>
+
+<title>Price History for {{ card_name }}</title>
+
 <body>
 
     <h1>Price History for {{ card_name }}</h1>
@@ -62,4 +61,5 @@
     </script>
 
 </body>
-</html>
+
+{% endblock %}

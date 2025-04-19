@@ -7,9 +7,17 @@
     --gold: #d4af37;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: 'Georgia', serif;
-    background: radial-gradient(circle at top, #1e1e2f, #0e0e17);
+    background: radial-gradient(ellipse at top, #1e1e2f 0%, #0e0e17 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: #e2e2e2;
     margin: 0;
     padding: 20px;

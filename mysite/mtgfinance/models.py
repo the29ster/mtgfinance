@@ -10,6 +10,11 @@ class CardPriceHistory(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     source = models.CharField(max_length=50)  # e.g., "tcgplayer", "cardmarket"
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["card_name", "date"]),
+        ]
+
     def __str__(self):
         return f"{self.card_name} ({self.set_code}) - {self.date}: ${self.price}"
     

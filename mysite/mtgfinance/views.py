@@ -18,11 +18,12 @@ def homepage(request):
     return render(request, "homepage.html", {"cards": cards_data, "query": card_name})
 
 def card_price_history(request, scryfall_id):
-    price_entries = CardPriceHistory.objects.filter(card_name=scryfall_id).order_by("date")
+    # Use .values_list to avoid fetching full model instances
+    price_entries = CardPriceHistory.objects.filter(card_name=scryfall_id).order_by("date").values_list("date", "price")
 
-    # Extract dates and prices
-    dates = [entry.date.strftime("%Y-%m-%d") for entry in price_entries]
-    prices = [float(entry.price) for entry in price_entries]
+    # Process data directly from tuples
+    dates = [date.strftime("%Y-%m-%d") for date, _ in price_entries]
+    prices = [float(price) for _, price in price_entries]
 
     dates_json = json.dumps(dates)
     prices_json = json.dumps(prices)

@@ -3,7 +3,7 @@ services:
     name: mtgfinance
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn mysite.wsgi:application
+    startCommand: cd mysite && gunicorn mysite.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true

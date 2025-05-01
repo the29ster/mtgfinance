@@ -1,8 +1,8 @@
-import json, subprocess, zipfile, requests
+import json, zipfile, requests
 from io import BytesIO
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.core.management import call_command
 from mtgfinance.models import CardPriceHistory
 
 PRICES_ZIP_URL = "https://mtgjson.com/api/v5/AllPrices.json.zip"
@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
 
         self.stdout.write("Flushing database...")
-        subprocess.run("python manage.py flush --noinput")
+        call_command('flush', '--noinput')
 
         self.stdout.write("Loading MTGJSON data...")
 

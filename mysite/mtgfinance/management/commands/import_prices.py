@@ -51,6 +51,7 @@ class Command(BaseCommand):
         self.stdout.write("Processing price data...")
 
         bulk_prices = []
+        BATCH_SIZE = 1000
 
         get_scryfall = mtgjson_to_scryfall.get
 
@@ -79,6 +80,12 @@ class Command(BaseCommand):
                                 )
                             except ValueError:
                                 self.stderr.write(f"Skipping invalid date format: {date_str}")
+
+            # Save in batches if we have enough data
+            if len(bulk_prices) >= BATCH_SIZE:
+                self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")
+                CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
+                bulk_prices = []  # Reset bulk prices to avoid memory issues
 
         if bulk_prices:
             self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")

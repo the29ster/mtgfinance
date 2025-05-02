@@ -1,6 +1,6 @@
 import json, zipfile, requests
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from mtgfinance.models import CardPriceHistory
 
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             self.stderr.write("Failed to load identifiers data.")
             return
 
-        # Create mapping: MTGJSON ID → Scryfall ID
+        # Map MTGJSON ID → Scryfall ID
         mtgjson_to_scryfall = {
             card_id: data.get("identifiers", {}).get("scryfallId")
             for card_id, data in identifier_data.get("data", {}).items()
@@ -50,32 +50,49 @@ class Command(BaseCommand):
         self.stdout.write("Processing price data...")
 
         bulk_prices = []
-
         get_scryfall = mtgjson_to_scryfall.get
 
-        # Iterate through each card's data
         for card_id, sets in price_data.get("data", {}).items():
-            scryfall_id = get_scryfall(card_id)  # Find matching Scryfall ID
+            scryfall_id = get_scryfall(card_id)
             if not scryfall_id:
                 continue
+
             for set_code, price_info in sets.items():
                 for source, price_history in price_info.items():
                     if source != "tcgplayer":
                         continue
+
                     if isinstance(price_history, dict) and price_history.get("retail"):
                         normal_prices = price_history["retail"].get("normal", {})
+                        if not normal_prices:
+                            continue
+
+                        # Find latest date in this card's price history
+                        try:
+                            dates = [datetime.strptime(d, "%Y-%m-%d").date() for d in normal_prices.keys()]
+                        except ValueError:
+                            continue
+
+                        if not dates:
+                            continue
+
+                        latest_date = max(dates)
+                        cutoff_date = latest_date - timedelta(days=6)
+
+                        # Only keep prices from the last 7 days (inclusive)
                         for date_str, price in normal_prices.items():
                             try:
                                 date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-                                bulk_prices.append(
-                                    CardPriceHistory(
-                                        card_name=scryfall_id,
-                                        set_code=set_code,
-                                        date=date_obj,
-                                        price=price,
-                                        source=source
+                                if cutoff_date <= date_obj <= latest_date:
+                                    bulk_prices.append(
+                                        CardPriceHistory(
+                                            card_name=scryfall_id,
+                                            set_code=set_code,
+                                            date=date_obj,
+                                            price=price,
+                                            source=source
+                                        )
                                     )
-                                )
                             except ValueError:
                                 self.stderr.write(f"Skipping invalid date format: {date_str}")
 

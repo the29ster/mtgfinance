@@ -6,7 +6,7 @@ from mtgfinance.models import CardPriceHistory
 
 PRICES_ZIP_URL = "https://mtgjson.com/api/v5/AllPrices.json.zip"
 IDENTIFIERS_ZIP_URL = "https://mtgjson.com/api/v5/AllIdentifiers.json.zip"
-BULK_INSERT_BATCH_SIZE = 100
+BULK_INSERT_BATCH_SIZE = 1000
 
 class Command(BaseCommand):
     help = "Import the last 7 days of MTG card prices using streaming to save memory"

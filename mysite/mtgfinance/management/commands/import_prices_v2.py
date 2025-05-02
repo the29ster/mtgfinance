@@ -1,4 +1,4 @@
-import json, zipfile, requests
+import json, zipfile, requests, gc
 from io import BytesIO
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -6,9 +6,10 @@ from mtgfinance.models import CardPriceHistory
 
 PRICES_ZIP_URL = "https://mtgjson.com/api/v5/AllPrices.json.zip"
 IDENTIFIERS_ZIP_URL = "https://mtgjson.com/api/v5/AllIdentifiers.json.zip"
+BULK_INSERT_BATCH_SIZE = 1000
 
 class Command(BaseCommand):
-    help = "Import historical MTG card prices with Scryfall IDs"
+    help = "Import the last 7 days of MTG card prices with Scryfall IDs"
 
     def fetch_json_from_zip(self, zip_url):
         self.stdout.write(f"Fetching data from {zip_url}...")
@@ -34,7 +35,7 @@ class Command(BaseCommand):
             self.stderr.write("Failed to load identifiers data.")
             return
 
-        # Map MTGJSON ID → Scryfall ID
+        # Map MTGJSON ID to Scryfall ID
         mtgjson_to_scryfall = {
             card_id: data.get("identifiers", {}).get("scryfallId")
             for card_id, data in identifier_data.get("data", {}).items()
@@ -51,6 +52,8 @@ class Command(BaseCommand):
 
         bulk_prices = []
         get_scryfall = mtgjson_to_scryfall.get
+        today = datetime.today().date()
+        seven_days_ago = today - timedelta(days=7)
 
         for card_id, sets in price_data.get("data", {}).items():
             scryfall_id = get_scryfall(card_id)
@@ -61,29 +64,12 @@ class Command(BaseCommand):
                 for source, price_history in price_info.items():
                     if source != "tcgplayer":
                         continue
-
                     if isinstance(price_history, dict) and price_history.get("retail"):
                         normal_prices = price_history["retail"].get("normal", {})
-                        if not normal_prices:
-                            continue
-
-                        # Find latest date in this card's price history
-                        try:
-                            dates = [datetime.strptime(d, "%Y-%m-%d").date() for d in normal_prices.keys()]
-                        except ValueError:
-                            continue
-
-                        if not dates:
-                            continue
-
-                        latest_date = max(dates)
-                        cutoff_date = latest_date - timedelta(days=6)
-
-                        # Only keep prices from the last 7 days (inclusive)
                         for date_str, price in normal_prices.items():
                             try:
                                 date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-                                if cutoff_date <= date_obj <= latest_date:
+                                if date_obj >= seven_days_ago:
                                     bulk_prices.append(
                                         CardPriceHistory(
                                             card_name=scryfall_id,
@@ -93,13 +79,14 @@ class Command(BaseCommand):
                                             source=source
                                         )
                                     )
+                                    if len(bulk_prices) >= BULK_INSERT_BATCH_SIZE:
+                                        CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
+                                        bulk_prices.clear()
+                                        gc.collect()
                             except ValueError:
                                 self.stderr.write(f"Skipping invalid date format: {date_str}")
 
         if bulk_prices:
-            self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")
             CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
-        else:
-            self.stdout.write("No valid price data found.")
 
         self.stdout.write("Import completed successfully.")

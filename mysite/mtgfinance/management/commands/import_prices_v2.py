@@ -1,4 +1,4 @@
-import zipfile, requests, ijson, gc
+import json, zipfile, requests, os
 from io import BytesIO
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -6,16 +6,18 @@ from mtgfinance.models import CardPriceHistory
 
 PRICES_ZIP_URL = "https://mtgjson.com/api/v5/AllPrices.json.zip"
 IDENTIFIERS_ZIP_URL = "https://mtgjson.com/api/v5/AllIdentifiers.json.zip"
-BULK_INSERT_BATCH_SIZE = 1000
 
 class Command(BaseCommand):
-    help = "Import the last 7 days of MTG card prices using streaming to save memory"
+    help = "Import last 7 days of MTG card prices and export to JSON zip"
 
-    def fetch_zip_stream(self, zip_url):
-        self.stdout.write(f"Fetching (streaming) data from {zip_url}...")
+    def fetch_json_from_zip(self, zip_url):
+        self.stdout.write(f"Fetching data from {zip_url}...")
         response = requests.get(zip_url, stream=True)
         if response.status_code == 200:
-            return zipfile.ZipFile(BytesIO(response.content), "r")
+            with zipfile.ZipFile(BytesIO(response.content), "r") as z:
+                json_filename = z.namelist()[0]
+                with z.open(json_filename) as json_file:
+                    return json.load(json_file)
         else:
             self.stderr.write(f"Failed to fetch {zip_url}. HTTP Status: {response.status_code}")
             return None
@@ -24,65 +26,95 @@ class Command(BaseCommand):
         self.stdout.write("Deleting old price data from the database...")
         CardPriceHistory.objects.all().delete()
 
-        today = datetime.today().date()
-        seven_days_ago = today - timedelta(days=7)
+        self.stdout.write("Loading MTGJSON data...")
 
-        # Load identifiers (small enough to fit in memory)
-        id_zip = self.fetch_zip_stream(IDENTIFIERS_ZIP_URL)
-        if not id_zip:
+        # Load identifiers
+        identifier_data = self.fetch_json_from_zip(IDENTIFIERS_ZIP_URL)
+        if not identifier_data:
+            self.stderr.write("Failed to load identifiers data.")
             return
 
-        with id_zip.open(id_zip.namelist()[0]) as f:
-            import json
-            identifier_data = json.load(f)
-            mtgjson_to_scryfall = {
-                cid: data["identifiers"]["scryfallId"]
-                for cid, data in identifier_data.get("data", {}).items()
-                if "scryfallId" in data.get("identifiers", {})
-            }
+        # Map MTGJSON ID → Scryfall ID
+        mtgjson_to_scryfall = {
+            card_id: data.get("identifiers", {}).get("scryfallId")
+            for card_id, data in identifier_data.get("data", {}).items()
+            if data.get("identifiers", {}).get("scryfallId")
+        }
 
-        id_zip.close()
-
-        # Stream prices
-        price_zip = self.fetch_zip_stream(PRICES_ZIP_URL)
-        if not price_zip:
+        # Load price data
+        price_data = self.fetch_json_from_zip(PRICES_ZIP_URL)
+        if not price_data:
+            self.stderr.write("Failed to load price data.")
             return
 
-        prices_file = price_zip.open(price_zip.namelist()[0])
-        parser = ijson.kvitems(prices_file, "data")
+        self.stdout.write("Processing price data...")
 
         bulk_prices = []
+        get_scryfall = mtgjson_to_scryfall.get
+        today = datetime.today().date()
+        cutoff_date = today - timedelta(days=7)
 
-        for card_id, sets in parser:
-            scryfall_id = mtgjson_to_scryfall.get(card_id)
+        # Iterate through each card's price info
+        for card_id, sets in price_data.get("data", {}).items():
+            scryfall_id = get_scryfall(card_id)
             if not scryfall_id:
                 continue
-
             for set_code, price_info in sets.items():
-                tcg_data = price_info.get("tcgplayer", {})
-                retail = tcg_data.get("retail", {})
-                normal_prices = retail.get("normal", {})
-
-                for date_str, price in normal_prices.items():
-                    try:
-                        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-                        if date_obj >= seven_days_ago:
-                            bulk_prices.append(CardPriceHistory(
-                                card_name=scryfall_id,
-                                set_code=set_code,
-                                date=date_obj,
-                                price=price,
-                                source="tcgplayer"
-                            ))
-                            if len(bulk_prices) >= BULK_INSERT_BATCH_SIZE:
-                                CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
-                                bulk_prices.clear()
-                                gc.collect()
-                    except ValueError:
+                for source, price_history in price_info.items():
+                    if source != "tcgplayer":
                         continue
+                    if isinstance(price_history, dict) and price_history.get("retail"):
+                        normal_prices = price_history["retail"].get("normal", {})
+                        for date_str, price in normal_prices.items():
+                            try:
+                                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+                                if date_obj >= cutoff_date:
+                                    bulk_prices.append(
+                                        CardPriceHistory(
+                                            card_name=scryfall_id,
+                                            set_code=set_code,
+                                            date=date_obj,
+                                            price=price,
+                                            source=source
+                                        )
+                                    )
+                            except ValueError:
+                                self.stderr.write(f"Skipping invalid date format: {date_str}")
 
         if bulk_prices:
+            self.stdout.write(f"Saving {len(bulk_prices)} price entries to the database...")
             CardPriceHistory.objects.bulk_create(bulk_prices, ignore_conflicts=True)
+        else:
+            self.stdout.write("No recent price data found.")
 
-        price_zip.close()
-        self.stdout.write("Import completed successfully.")
+        self.stdout.write("Saving JSON export of price data...")
+
+        # Query saved data from the past 7 days
+        recent_prices = CardPriceHistory.objects.filter(date__gte=cutoff_date)
+
+        # Serialize to list of dicts
+        price_list = [
+            {
+                "card_name": cp.card_name,
+                "set_code": cp.set_code,
+                "date": cp.date.strftime("%Y-%m-%d"),
+                "price": float(cp.price),
+                "source": cp.source,
+            }
+            for cp in recent_prices
+        ]
+
+        # Save JSON
+        json_path = "recent_prices.json"
+        with open(json_path, "w") as f:
+            json.dump(price_list, f, indent=2)
+
+        # Zip the JSON
+        zip_path = "recent_prices.zip"
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(json_path)
+
+        # Optionally delete the uncompressed JSON
+        os.remove(json_path)
+
+        self.stdout.write(f"JSON export complete: {zip_path}")

@@ -9,13 +9,15 @@ class Command(BaseCommand):
     help = "Streaming loader for price data JSON using ijson"
 
     def handle(self, *args, **kwargs):
+        self.stdout.write("Deleting existing CardPriceHistory entries...")
+        CardPriceHistory.objects.all().delete()
+
         self.stdout.write(f"Streaming data from {FIXTURE_PATH}...")
 
         count = 0
         batch = []
 
         with open(FIXTURE_PATH, 'r') as f:
-            # 'item' targets the elements in the top-level array
             for entry in ijson.items(f, 'item'):
                 if entry["model"] != "mtgfinance.cardpricehistory":
                     continue

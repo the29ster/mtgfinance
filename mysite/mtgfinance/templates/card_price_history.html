@@ -1,65 +1,118 @@
 {% extends "base.html" %}
-{% block title %}MTGFinance Chart{% endblock %}
+{% block title %}Price History - {{ card_name }}{% endblock %}
 {% block content %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-    canvas { 
-        max-width: 100%; 
-        height: 1000px;
-        margin: 20px auto; 
-        display: block; 
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+        margin: 40px auto;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    button {
+        padding: 8px 16px;
+        font-size: 14px;
+        border: none;
+        background-color: #444;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+    button:hover {
+        background-color: #222;
+    }
+    canvas {
+        max-width: 90%;
+        max-height: 500px;
+        margin: 0 auto 40px;
+        display: block;
     }
 </style>
 
-<title>Price History for {{ card_name }}</title>
+<h1>Price History for {{ card_name }}</h1>
+<button onclick="window.history.back();">← Back</button>
+<canvas id="priceChart"></canvas>
 
-<body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dates = JSON.parse('{{ dates|escapejs }}');
+    const prices = JSON.parse('{{ prices|escapejs }}');
 
-    <h1>Price History for {{ card_name }}</h1>
-    <button onclick="window.history.back();">Back</button>
-    <canvas id="priceChart"></canvas>
+    const ctx = document.getElementById("priceChart").getContext("2d");
 
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const dates = JSON.parse('{{ dates|escapejs }}');
-        const prices = JSON.parse('{{ prices|escapejs }}');
-        
-        const ctx = document.getElementById("priceChart").getContext("2d");
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: "Price ($)",
-                    data: prices,
-                    borderColor: "blue",
-                    fill: false,
-                    tension: 0.1,
-                    pointBackgroundColor: "red",
-                    pointBorderColor: "black",
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    pointHoverBackgroundColor: "yellow",
-                    pointHoverBorderColor: "black",
-                    pointHitRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 1,
-                scales: {
-                    x: { title: { display: true, text: "Date" } },
-                    y: { title: { display: true, text: "Price ($)" }, beginAtZero: false }
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: dates,
+            datasets: [{
+                label: "TCGPlayer Price (USD)",
+                data: prices,
+                borderColor: "#0074D9",
+                backgroundColor: "rgba(0, 116, 217, 0.1)",
+                pointBackgroundColor: "#FF4136",
+                pointBorderColor: "#111",
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: "#FFDC00",
+                pointHoverBorderColor: "#111",
+                tension: 0.25,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    mode: "index",
+                    intersect: false
+                },
+                legend: {
+                    display: true,
+                    position: "top"
+                },
+                title: {
+                    display: true,
+                    text: `Price Trend for {{ card_name }}`,
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    }
                 }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Date"
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Price (USD)"
+                    },
+                    beginAtZero: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
-        });
+        }
     });
-    </script>
-
-</body>
+});
+</script>
 
 {% endblock %}

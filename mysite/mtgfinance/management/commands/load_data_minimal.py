@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from mtgfinance.models import CardPriceHistory
 
 BATCH_SIZE = 50
-FIXTURE_PATH = 'mtgfinance/fixtures/AllPrices_last7days.json'
+FIXTURE_PATH = 'recent_card_prices.json'
 
 class Command(BaseCommand):
     help = "Custom minimal loader for price data JSON to avoid OOM"

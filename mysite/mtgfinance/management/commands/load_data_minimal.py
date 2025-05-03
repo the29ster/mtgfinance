@@ -1,52 +1,56 @@
 import os
+import datetime
 import zipfile
 import ijson
-import datetime
 from django.core.management.base import BaseCommand
 from mtgfinance.models import CardPriceHistory
 
 BATCH_SIZE = 50
-FIXTURE_PATH = 'recent_prices.json'
 ZIP_PATH = 'recent_prices.zip'
+JSON_PATH = 'recent_prices.json'
 
 class Command(BaseCommand):
     help = "Streaming loader for price data JSON using ijson"
 
     def handle(self, *args, **kwargs):
-        # Check if zip file exists
-        if not os.path.exists(ZIP_PATH):
-            self.stdout.write("No zip file found. Skipping data load.")
-            return
-
-        # Check timestamp of zip file
-        zip_modified_time = datetime.datetime.fromtimestamp(os.path.getmtime(ZIP_PATH)).date()
-
-        # Get the latest date in the database
+        # Show timestamps for comparison
+        zip_modified_time = datetime.datetime.fromtimestamp(os.path.getmtime(ZIP_PATH))
         latest_entry = CardPriceHistory.objects.order_by('-date').first()
-        if latest_entry and latest_entry.date >= zip_modified_time:
-            self.stdout.write("Database already has recent data. Skipping import.")
-            return
 
-        # Proceed with data load
-        self.stdout.write("New data detected. Deleting old entries...")
+        self.stdout.write(f"ZIP file last modified: {zip_modified_time}")
+
+        if latest_entry:
+            latest_entry_datetime = datetime.datetime.combine(latest_entry.date, datetime.time.min)
+            self.stdout.write(f"Latest DB entry date:  {latest_entry_datetime}")
+
+            if latest_entry_datetime >= zip_modified_time:
+                self.stdout.write("Database already has recent data. Skipping import.")
+                return
+
+        self.stdout.write("New data detected. Proceeding with import...")
+
+        # Delete old entries
+        self.stdout.write("Deleting existing CardPriceHistory entries...")
         CardPriceHistory.objects.all().delete()
 
-        self.stdout.write("Extracting JSON from zip...")
-        with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-            zip_ref.extract(FIXTURE_PATH)
+        # Unzip file
+        with zipfile.ZipFile(ZIP_PATH, 'r') as zipf:
+            zipf.extract(JSON_PATH)
 
-        self.stdout.write(f"Streaming data from {FIXTURE_PATH}...")
+        # Load data
+        self.stdout.write(f"Streaming data from {JSON_PATH}...")
         count = 0
         batch = []
 
-        with open(FIXTURE_PATH, 'r') as f:
+        with open(JSON_PATH, 'r') as f:
             for entry in ijson.items(f, 'item'):
+                fields = entry
                 obj = CardPriceHistory(
-                    card_name=entry["card_name"],
-                    set_code=entry["set_code"],
-                    date=entry["date"],
-                    price=entry["price"],
-                    source=entry["source"]
+                    card_name=fields["card_name"],
+                    set_code=fields["set_code"],
+                    date=fields["date"],
+                    price=fields["price"],
+                    source=fields["source"]
                 )
                 batch.append(obj)
 
@@ -59,5 +63,5 @@ class Command(BaseCommand):
             CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
             count += len(batch)
 
+        os.remove(JSON_PATH)
         self.stdout.write(f"Done. Inserted {count} entries.")
-        os.remove(FIXTURE_PATH)

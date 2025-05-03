@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from mtgfinance.models import CardPriceHistory
 
 BATCH_SIZE = 50
-FIXTURE_PATH = 'recent_card_prices.json'
+FIXTURE_PATH = 'recent_prices.json'
 
 class Command(BaseCommand):
     help = "Streaming loader for price data JSON using ijson"

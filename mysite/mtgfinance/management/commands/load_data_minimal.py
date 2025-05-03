@@ -1,19 +1,19 @@
 import ijson
 import os
+import zipfile
 import datetime
 from django.core.management.base import BaseCommand
 from mtgfinance.models import CardPriceHistory
 
 BATCH_SIZE = 50
-FIXTURE_PATH = 'recent_prices.json'
 ZIP_PATH = 'recent_prices.zip'
+FIXTURE_PATH = 'recent_prices.json'
 LAST_IMPORT_FILE = '.last_import_time'
 
 class Command(BaseCommand):
     help = "Streaming loader for price data JSON using ijson"
 
     def handle(self, *args, **kwargs):
-        # Check zip file modification time
         if not os.path.exists(ZIP_PATH):
             self.stdout.write(f"No ZIP file found at {ZIP_PATH}. Skipping import.")
             return
@@ -32,8 +32,13 @@ class Command(BaseCommand):
         else:
             self.stdout.write("No previous import record found.")
 
+        # Unzip the JSON file
+        self.stdout.write(f"Unzipping {ZIP_PATH}...")
+        with zipfile.ZipFile(ZIP_PATH, 'r') as zipf:
+            zipf.extract(FIXTURE_PATH)
+
         if not os.path.exists(FIXTURE_PATH):
-            self.stdout.write(f"No JSON file found at {FIXTURE_PATH}. Skipping import.")
+            self.stdout.write(f"JSON file {FIXTURE_PATH} was not found after unzip. Aborting.")
             return
 
         self.stdout.write("Deleting existing CardPriceHistory entries...")
@@ -64,9 +69,12 @@ class Command(BaseCommand):
             CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
             count += len(batch)
 
-        # Record current time as last import
+        # Save timestamp of import
         with open(LAST_IMPORT_FILE, 'w') as f:
             f.write(datetime.datetime.now().isoformat())
+
+        # Optionally remove the unzipped JSON file
+        os.remove(FIXTURE_PATH)
 
         self.stdout.write(f"Done. Inserted {count} entries.")
         self.stdout.write("Import complete. Timestamp updated.")

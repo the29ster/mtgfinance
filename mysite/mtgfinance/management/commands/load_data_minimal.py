@@ -6,7 +6,7 @@ BATCH_SIZE = 50
 FIXTURE_PATH = 'recent_prices.json'
 
 class Command(BaseCommand):
-    help = "Streaming loader for price data JSON using ijson"
+    help = "Streaming loader for raw price data JSON using ijson"
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Deleting existing CardPriceHistory entries...")
@@ -18,11 +18,7 @@ class Command(BaseCommand):
         batch = []
 
         with open(FIXTURE_PATH, 'r') as f:
-            for entry in ijson.items(f, 'item'):
-                if entry["model"] != "mtgfinance.cardpricehistory":
-                    continue
-
-                fields = entry["fields"]
+            for fields in ijson.items(f, 'item'):
                 obj = CardPriceHistory(
                     card_name=fields["card_name"],
                     set_code=fields["set_code"],

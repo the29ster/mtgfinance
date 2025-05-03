@@ -1,5 +1,6 @@
 import ijson
 from django.core.management.base import BaseCommand
+from django.db import connection
 from mtgfinance.models import CardPriceHistory
 
 BATCH_SIZE = 50
@@ -10,7 +11,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Deleting existing CardPriceHistory entries...")
-        CardPriceHistory.objects.all().delete()
+        with connection.cursor() as cursor:
+            cursor.execute("TRUNCATE TABLE mtgfinance_cardpricehistory RESTART IDENTITY CASCADE")
 
         self.stdout.write(f"Streaming data from {FIXTURE_PATH}...")
 

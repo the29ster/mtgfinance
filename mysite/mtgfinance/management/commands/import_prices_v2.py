@@ -2,8 +2,7 @@ import json, zipfile, requests, os
 from io import BytesIO
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
-from django.core.serializers.json import DjangoJSONEncoder
-from mtgfinance.models import CardPriceHistory, DataImportLog
+from mtgfinance.models import CardPriceHistory
 
 PRICES_ZIP_URL = "https://mtgjson.com/api/v5/AllPrices.json.zip"
 IDENTIFIERS_ZIP_URL = "https://mtgjson.com/api/v5/AllIdentifiers.json.zip"
@@ -24,9 +23,8 @@ class Command(BaseCommand):
             return None
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("Deleting old data from the database...")
+        self.stdout.write("Deleting old price data from the database...")
         CardPriceHistory.objects.all().delete()
-        DataImportLog.objects.all().delete()
 
         self.stdout.write("Loading MTGJSON data...")
 
@@ -89,39 +87,27 @@ class Command(BaseCommand):
         else:
             self.stdout.write("No recent price data found.")
 
-        import_log = DataImportLog.objects.create()
-
         self.stdout.write("Saving JSON export of price data...")
 
-        # Combine CardPriceHistory and DataImportLog entries for export
-        export_data = []
-
-        # CardPriceHistory entries (past 7 days)
+        # Query saved data from the past 7 days
         recent_prices = CardPriceHistory.objects.filter(date__gte=cutoff_date)
-        for cp in recent_prices:
-            export_data.append({
-                "model": "mtgfinance.cardpricehistory",
-                "fields": {
-                    "card_name": cp.card_name,
-                    "set_code": cp.set_code,
-                    "date": cp.date.strftime("%Y-%m-%d"),
-                    "price": float(cp.price),
-                    "source": cp.source,
-                }
-            })
 
-        # Latest DataImportLog
-        export_data.append({
-            "model": "mtgfinance.dataimportlog",
-            "fields": {
-                "timestamp": import_log.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Serialize to list of dicts
+        price_list = [
+            {
+                "card_name": cp.card_name,
+                "set_code": cp.set_code,
+                "date": cp.date.strftime("%Y-%m-%d"),
+                "price": float(cp.price),
+                "source": cp.source,
             }
-        })
+            for cp in recent_prices
+        ]
 
-        # Save to JSON
+        # Save JSON
         json_path = "recent_prices.json"
         with open(json_path, "w") as f:
-            json.dump(export_data, f, indent=2, cls=DjangoJSONEncoder)
+            json.dump(price_list, f, indent=2)
 
         # Zip the JSON
         zip_path = "recent_prices.zip"

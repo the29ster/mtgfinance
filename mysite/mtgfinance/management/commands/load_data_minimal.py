@@ -52,45 +52,29 @@ class Command(BaseCommand):
         batch = []
 
         with open(FIXTURE_PATH, 'r') as f:
-            data = ijson.items(f, 'item')
-            last_entry = None
-            for entry in data:
-                if entry['model'] == 'mtgfinance.dataimportlog':
-                    last_entry = entry
-                    continue
+            for entry in ijson.items(f, 'item'):
+                fields = entry
+                obj = CardPriceHistory(
+                    card_name=fields["card_name"],
+                    set_code=fields["set_code"],
+                    date=fields["date"],
+                    price=fields["price"],
+                    source=fields["source"]
+                )
+                batch.append(obj)
 
-                # Process the CardPriceHistory entries
-                if entry['model'] == 'mtgfinance.cardpricehistory':
-                    fields = entry['fields']
-                    card_name = fields["card_name"]
-                    set_code = fields["set_code"]
-                    date = fields["date"]
-                    price = fields["price"]
-                    source = fields["source"]
+                if len(batch) >= BATCH_SIZE:
+                    CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
+                    count += len(batch)
+                    batch.clear()
 
-                    obj = CardPriceHistory(
-                        card_name=card_name,
-                        set_code=set_code,
-                        date=date,
-                        price=price,
-                        source=source
-                    )
-                    batch.append(obj)
+        if batch:
+            CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
+            count += len(batch)
 
-                    if len(batch) >= BATCH_SIZE:
-                        CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
-                        count += len(batch)
-                        batch.clear()
-
-            if batch:
-                CardPriceHistory.objects.bulk_create(batch, ignore_conflicts=True)
-                count += len(batch)
-
-            # Insert the timestamp from the last entry into DataImportLog
-            if last_entry:
-                timestamp = last_entry['fields']['timestamp']
-                DataImportLog.objects.create(timestamp=timestamp)
-                self.stdout.write(f"Inserted import timestamp: {timestamp}")
+        # Save timestamp of import to DataImportLog
+        self.stdout.write("Saving import timestamp...")
+        DataImportLog.objects.create()
 
         # Optionally remove the unzipped JSON file
         os.remove(FIXTURE_PATH)

@@ -3,7 +3,6 @@ import os
 import zipfile
 import datetime
 from django.core.management.base import BaseCommand
-from django.utils.timezone import make_aware
 from mtgfinance.models import CardPriceHistory, DataImportLog
 
 BATCH_SIZE = 50
@@ -19,9 +18,8 @@ class Command(BaseCommand):
             self.stdout.write(f"No ZIP file found at {ZIP_PATH}. Skipping import.")
             return
 
-        # Get last modified time of the ZIP file and make it timezone-aware (assuming UTC)
+        # Get last modified time of the ZIP file
         zip_modified_time = datetime.datetime.fromtimestamp(os.path.getmtime(ZIP_PATH))
-        zip_modified_time = make_aware(zip_modified_time)  # Make it timezone-aware
         self.stdout.write(f"ZIP file last modified: {zip_modified_time}")
 
         # Check the last import timestamp from the database

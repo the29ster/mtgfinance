@@ -9,7 +9,9 @@
 <body>
 
     <h1 class="chart-page-title">Price History for {{ card_name }}</h1>
-    <button class="back-button" onclick="window.history.back();">Back</button>
+    <div class="back-button-container">
+        <button class="back-button" onclick="window.history.back();">Back</button>
+    </div>
     <div class="chart-container">
         <canvas id="priceChart"></canvas>
     </div>
@@ -41,8 +43,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 1,
+                maintainAspectRatio: false,
                 scales: {
                     x: { title: { display: true, text: "Date" } },
                     y: { title: { display: true, text: "Price ($)" }, beginAtZero: false }

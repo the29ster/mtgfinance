@@ -264,3 +264,9 @@ canvas {
     background-color: var(--red-mana);
     transform: scale(1.05);
 }
+
+.back-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}

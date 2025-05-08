@@ -10,6 +10,7 @@
         {% for field in form %}
             <div class="form-group">
                 {{ field.label_tag }}
+                <br>
                 {{ field }}
                 {% if field.errors %}
                     <p class="auth-error">{{ field.errors|join:", " }}</p>

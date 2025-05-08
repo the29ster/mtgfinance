@@ -283,3 +283,65 @@ canvas {
     justify-content: center;
     margin-bottom: 1rem;
 }
+
+.auth-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: linear-gradient(145deg, #2c2c3e, #1a1a26);
+    border: 2px solid var(--blue-mana);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+.auth-container h2 {
+    margin-bottom: 1rem;
+    color: var(--gold);
+}
+
+.auth-container input[type="text"],
+.auth-container input[type="password"],
+.auth-container input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    margin: 0.5rem 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+}
+
+.auth-container button {
+    width: 100%;
+    padding: 10px;
+    font-weight: bold;
+    background-color: var(--blue-mana);
+    color: white;
+    border: 2px solid var(--white-mana);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.auth-container button:hover {
+    background-color: var(--red-mana);
+    transform: scale(1.05);
+}
+
+.auth-container a {
+    color: var(--blue-mana);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-container a:hover {
+    text-decoration: underline;
+}
+
+.auth-error {
+    color: #ff5555;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}

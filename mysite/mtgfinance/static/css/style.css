@@ -305,7 +305,8 @@ canvas {
 .auth-container input[type="email"] {
     width: 100%;
     padding: 10px;
-    margin: 0.5rem 0;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 1rem;
@@ -356,4 +357,10 @@ canvas {
     font-weight: bold;
     color: var(--gold);
     margin-bottom: 0.25rem;
+}
+
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }

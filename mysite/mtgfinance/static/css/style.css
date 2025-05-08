@@ -236,6 +236,18 @@ nav a:hover {
     padding: 1rem;
 }
 
+@media (max-height: 800px) {
+    .chart-container {
+        height: 45vh; /* for short screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 40vh; /* for narrower/laptop-sized screens */
+    }
+}
+
 canvas {
     width: 100% !important;
     height: auto !important;

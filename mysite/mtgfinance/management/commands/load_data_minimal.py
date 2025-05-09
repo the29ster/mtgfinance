@@ -8,7 +8,7 @@ from mtgfinance.models import CardPriceHistory
 BATCH_SIZE = 50
 ZIP_PATH = 'recent_prices.zip'
 FIXTURE_PATH = 'recent_prices.json'
-SHOULD_IMPORT = False
+SHOULD_IMPORT = True
 
 class Command(BaseCommand):
     help = "Streaming loader for price data JSON using ijson"
